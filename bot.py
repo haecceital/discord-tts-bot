@@ -13,7 +13,9 @@ cmds = [
 "!volume",
 "!rate",
 "!reload",
-"!help"
+"!help",
+"!stats",
+"!echo"
 ]
 
 
