@@ -14,7 +14,7 @@ def run_web():
     app.run(host = "0.0.0.0", port = port)
 
 
-Tread(target = run_web).start()
+Thread(target = run_web).start()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 bot.run(TOKEN)
