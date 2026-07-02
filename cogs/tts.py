@@ -3,6 +3,16 @@ from discord.ext import commands
 from utils import check_id
 
 
+sound_effects = {
+    "what the dog doing": "soundeffects/WhatTheDogDoing.mp3",
+    "why are you gay": "soundeffects/WhyAreYouGay.mp3",
+    "陽光彩虹小白馬": "soundeffects/SunshineRainbowWhitePony.mp3",
+    # "顆秒": "soundeffects/OneTap.mp3",
+    "creeper": "soundeffects/CreeperHiss.mp3",
+    "windows xp shutdown": "soundeffects/WindowsXpShutdown.mp3",
+    "sus": "soundeffects/AmongUsStart.mp3",
+}
+
 def check_format(text: str) -> bool:
     if len(text) < 3: return False
     elif text[0] != '-' or text[0] != '+': return False
@@ -44,7 +54,10 @@ async def play_voice(voice_client: discord.VoiceProtocol, text: str, rate: str, 
     )
     await communicate.save(output_filename)
 
-    source = discord.FFmpegPCMAudio(executable = "./ffmpeg", source = output_filename)
+    try:
+        source = discord.FFmpegPCMAudio(executable = "ffmpeg", source = output_filename)
+    except:
+        source = discord.FFmpegPCMAudio(executable = "./ffmpeg", source = output_filename)
     
     def after_playing(error):
 
@@ -139,6 +152,34 @@ class TTSCog(commands.Cog):
             return
 
         await ctx.reply(f"volume is set to {runtime.volume}")
+
+    @commands.command(name = "play")
+    async def play(self, ctx, *, effect_name: str = None):
+        runtime = self.bot.get_runtime(ctx.guild.id)
+
+        if runtime.locked and check_id(ctx.author.id):
+            await ctx.reply(":x:")
+            return
+
+        if effect_name is None:
+            result = "```\navaliable effect list:\n"
+            for key in sound_effects:
+                result += "  " + key + '\n'
+            result += "```"
+
+            await ctx.reply(result)
+        elif (effect_path := sound_effects.get(effect_name)) is not None:
+            voice_client = ctx.voice_client
+            if not voice_client:
+                await ctx.reply("join a voice channel before using tts")
+                return
+            
+            try:
+                source = discord.FFmpegPCMAudio(executable = "ffmpeg", source = effect_path)
+            except:
+                source = discord.FFmpegPCMAudio(executable = "./ffmpeg", source = effect_path)
+
+            voice_client.play(source)
 
     @commands.command(name = "tts")
     async def tts(self, ctx, *, text: str):

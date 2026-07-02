@@ -15,7 +15,8 @@ cmds = [
 "!reload",
 "!help",
 "!stats",
-"!echo"
+"!echo",
+"!play"
 ]
 
 
