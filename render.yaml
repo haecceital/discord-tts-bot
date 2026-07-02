@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: tts-bot
+    runtime: python
+    buildCommand: ./build.sh
+    startCommand: python main.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0

@@ -44,7 +44,7 @@ async def play_voice(voice_client: discord.VoiceProtocol, text: str, rate: str, 
     )
     await communicate.save(output_filename)
 
-    source = discord.FFmpegPCMAudio(executable = "ffmpeg", source = output_filename)
+    source = discord.FFmpegPCMAudio(executable = "./ffmpeg", source = output_filename)
     
     def after_playing(error):
 
