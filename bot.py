@@ -44,15 +44,15 @@ class TTSBot(commands.Bot):
         return self.runtime[guild_id]
 
 
-if __name__ == "__main__":
-    intents = discord.Intents.default()
-    intents.message_content = True
-    intents.members = True
 
-    bot = TTSBot(
-        command_prefix = '!',
-        intents = intents,
-        # help_command = None
-    )
+intents = discord.Intents.default()
+intents.message_content = True
+intents.members = True
 
-    bot.load_cogs()
+bot = TTSBot(
+    command_prefix = '!',
+    intents = intents,
+    # help_command = None
+)
+
+bot.load_cogs()
