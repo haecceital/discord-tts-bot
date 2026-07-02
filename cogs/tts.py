@@ -166,7 +166,7 @@ class TTSCog(commands.Cog):
 
         if message.author == self.bot.user: return
         if runtime.listening_channel != message.channel.id: return
-        if check_id(message.author.id): return        
+        if runtime.locked and check_id(message.author.id): return        
         for cmd in self.bot.cmds:
             if message.content.startswith(cmd): return
 
