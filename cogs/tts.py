@@ -123,12 +123,13 @@ class TTSCog(commands.Cog):
             result += "```"
 
             await ctx.reply(result)
-        elif (effect_path := sound_effects.get(effect)) is not None:
-            voice_client = ctx.voice_client
-            if not voice_client:
-                await ctx.reply("join a voice channel before using tts")
-                return
-            
+            return
+        
+        voice_client = ctx.voice_client
+        if not voice_client:
+            await ctx.reply("join a voice channel before using tts")
+            return
+        if (effect_path := sound_effects.get(effect)) is not None:
             await play_voice(
                 voice_client,
                 path = effect_path

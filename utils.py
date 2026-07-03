@@ -48,7 +48,7 @@ async def play_voice(
     def after_playing(error): pass
 
     if path is None:
-        output_filename = "tts_output.mp3"
+        path = "tts_output.mp3"
         
         VOICE = "zh-TW-HsiaoChenNeural"
         communicate = edge_tts.Communicate(
@@ -57,14 +57,14 @@ async def play_voice(
             rate = rate,
             volume = volume
         )
-        await communicate.save(output_filename)
+        await communicate.save(path)
 
         def after_playing(error):
 
-            if os.path.exists(output_filename):
-                os.remove(output_filename)
+            if os.path.exists(path):
+                os.remove(path)
 
-    source = discord.FFmpegPCMAudio(executable = ffmpeg_path, source = output_filename)
+    source = discord.FFmpegPCMAudio(executable = ffmpeg_path, source = path)
 
     voice_client.play(source, after = after_playing)
 
