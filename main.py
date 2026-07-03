@@ -3,6 +3,12 @@ from flask import Flask
 from threading import Thread
 from bot import bot
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 app = Flask('')
 
 @app.route('/')

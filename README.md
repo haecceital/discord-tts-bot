@@ -1,0 +1,1 @@
+since i need this to chat with my friends, i make this bot

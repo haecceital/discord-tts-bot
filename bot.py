@@ -1,23 +1,6 @@
-import discord, os, asyncio
+import discord, os, time
 from discord.ext import commands
 from utils import RuntimeObj
-
-
-cmds = [
-"!join",
-"!leave",
-"!tts",
-"!lock",
-"!listen",
-"!check",
-"!volume",
-"!rate",
-"!reload",
-"!help",
-"!stats",
-"!echo",
-"!play"
-]
 
 
 class TTSBot(commands.Bot):
@@ -25,7 +8,7 @@ class TTSBot(commands.Bot):
         super().__init__(*args, **kwargs)
 
         self.runtime = {}
-        self.cmds = cmds
+        self.start_time = time.time()
 
     async def on_ready(self):
         print(f">>{bot.user} is onlin<<")
