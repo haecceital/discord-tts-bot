@@ -1,13 +1,14 @@
 import discord
 from discord.ext import commands
 from utils import check_id, play_voice, replace
+from collections import deque
 
 
 sound_effects = {
     "what the dog doing": "soundeffects/WhatTheDogDoing.mp3",
     "why are you gay": "soundeffects/WhyAreYouGay.mp3",
     "陽光彩虹小白馬": "soundeffects/SunshineRainbowWhitePony.mp3",
-    "顆秒": "soundeffects/OneTap.mp3",
+    # "顆秒": "soundeffects/OneTap.mp3",
     "creeper": "soundeffects/CreeperHiss.mp3",
     "windows xp shutdown": "soundeffects/WindowsXpShutdown.mp3",
     "sus": "soundeffects/AmongUsStart.mp3",
@@ -15,9 +16,9 @@ sound_effects = {
 
 def check_format(text: str) -> bool:
     if len(text) < 3: return False
-    elif text[0] != '-' or text[0] != '+': return False
+    elif text[0] != '-' and text[0] != '+': return False
     elif text[-1] != '%': return False
-    elif not text[1:len(text) - 1].isdigit(): return False
+    elif not text[1:-1].isdigit(): return False
 
     return True
 
@@ -31,12 +32,18 @@ class TTSCog(commands.Cog):
         runtime = self.bot.get_runtime(ctx.guild.id)
 
         if runtime.locked and check_id(ctx.author.id):
+            await ctx.add_reaction("💩")
             await ctx.reply(":x:")
             return
 
         if ctx.author.voice:
             channel = ctx.author.voice.channel
-            await channel.connect()
+
+            if ctx.voice_client:
+                await ctx.voice_client.move_to(channel)
+            else:
+                await channel.connect()
+
             await ctx.reply(f"joined {channel.name}")
         else:
             await ctx.reply("join a voice channel first")
@@ -46,6 +53,7 @@ class TTSCog(commands.Cog):
         runtime = self.bot.get_runtime(ctx.guild.id)
 
         if runtime.locked and check_id(ctx.author.id):
+            await ctx.add_reaction("💩")
             await ctx.reply(":x:")
             return
 
@@ -60,6 +68,7 @@ class TTSCog(commands.Cog):
         runtime = self.bot.get_runtime(ctx.guild.id)
 
         if runtime.locked and check_id(ctx.author.id):
+            await ctx.add_reaction("💩")
             await ctx.reply(":x:")
             return
 
@@ -77,6 +86,7 @@ class TTSCog(commands.Cog):
         runtime = self.bot.get_runtime(ctx.guild.id)
 
         if runtime.locked and check_id(ctx.author.id):
+            await ctx.add_reaction("💩")
             await ctx.reply(":x:")
             return
 
@@ -95,6 +105,7 @@ class TTSCog(commands.Cog):
         runtime = self.bot.get_runtime(ctx.guild.id)
 
         if runtime.locked and check_id(ctx.author.id):
+            await ctx.add_reaction("💩")
             await ctx.reply(":x:")
             return
 
@@ -113,6 +124,7 @@ class TTSCog(commands.Cog):
         runtime = self.bot.get_runtime(ctx.guild.id)
 
         if runtime.locked and check_id(ctx.author.id):
+            await ctx.add_reaction("💩")
             await ctx.reply(":x:")
             return
 
@@ -130,6 +142,8 @@ class TTSCog(commands.Cog):
             await ctx.reply("join a voice channel before using tts")
             return
         if (effect_path := sound_effects.get(effect)) is not None:
+            await ctx.message.add_reaction("<:Air:1458671145845788744>")
+
             await play_voice(
                 voice_client,
                 path = effect_path
@@ -141,6 +155,8 @@ class TTSCog(commands.Cog):
             for idx, key in enumerate(sound_effects):
                 if idx == effect: effect_path = sound_effects.get(key)
 
+            await ctx.message.add_reaction(":Air:1458671145845788744")
+
             await play_voice(
                 voice_client,
                 path = effect_path
@@ -151,6 +167,7 @@ class TTSCog(commands.Cog):
         runtime = self.bot.get_runtime(ctx.guild.id)
 
         if runtime.locked and check_id(ctx.author.id):
+            await ctx.add_reaction("💩")
             await ctx.reply(":x:")
             return
 
@@ -158,6 +175,8 @@ class TTSCog(commands.Cog):
         if not voice_client:
             await ctx.reply("join a voice channel before using tts")
             return
+        
+        await ctx.message.add_reaction(":Air:1458671145845788744")
         
         await play_voice(
             voice_client,
@@ -170,14 +189,18 @@ class TTSCog(commands.Cog):
     async def on_message(self, message: discord.Message):
         runtime = self.bot.get_runtime(message.guild.id)
 
-        if message.author == self.bot.user: return
+        if message.author == self.bot.user or message.author.bot: return
         if runtime.listening_channel != message.channel.id: return
-        if runtime.locked and check_id(message.author.id): return        
-        if message.content[0] == "!": return
+        if runtime.locked and check_id(message.author.id):
+            await message.add_reaction("💩")
+            return        
+        if message.content.startswith('!'): return
 
         voice_client = message.guild.voice_client
         if not voice_client:
             await message.reply("im not in a voice channel")
+
+        await message.add_reaction(":Air:1458671145845788744")
 
         await play_voice(
             voice_client,

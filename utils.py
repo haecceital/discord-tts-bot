@@ -1,6 +1,6 @@
 import hashlib, discord, os, edge_tts, re
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Any
 
 
 whitelist = [
@@ -60,9 +60,9 @@ async def play_voice(
         await communicate.save(path)
 
         def after_playing(error):
-
-            if os.path.exists(path):
-                os.remove(path)
+            pass
+            # if os.path.exists(path):
+                # os.remove(path)
 
     source = discord.FFmpegPCMAudio(executable = ffmpeg_path, source = path)
 
@@ -75,7 +75,7 @@ def format_sec(secs: int) -> str:
     hours, r = divmod(r, 3600)    
     mins, secs = divmod(r, 60)
 
-    return f"{days:02d}:{hours:02d}:{mins:02d}:{secs:02d}"
+    return f"{days:02d} days {hours:02d} hours {mins:02d} mins {secs:02d} secs"
 
 
 @dataclass
@@ -86,3 +86,5 @@ class RuntimeObj:
     listening_channel: Optional[int] = None
     rate: str = "+0%"
     volume: str = "+0%"
+
+    saved_obg: Any = None
