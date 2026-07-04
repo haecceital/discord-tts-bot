@@ -10,8 +10,6 @@ from utils import RuntimeObj, check_id, mention_to_name
 
 ffmpeg_path = "./ffmpeg" if os.getenv("RENDER") else "ffmpeg"
 
-leave_by_command = False
-
 
 def check_format(text: str) -> bool:
     if len(text) < 3:
@@ -85,8 +83,7 @@ class TTSCog(commands.Cog):
             await ctx.voice_client.disconnect()
             await ctx.reply("goodbye")
 
-            global leave_by_command
-            leave_by_command = True
+            runtime._leave_by_command = True
 
             if runtime.listening_channel:
                 await ctx.reply(
@@ -204,14 +201,13 @@ class TTSCog(commands.Cog):
             return
 
         if before.channel is not None and after.channel is None:
-            global leave_by_command
-            if not leave_by_command:
+            if not runtime._leave_by_command:
                 await asyncio.sleep(1)
 
                 await before.channel.connect()
                 return
 
-            leave_by_command = False
+            runtime._leave_by_command = False
             runtime = await self.bot.get_runtime(member.guild.id)
 
             try:

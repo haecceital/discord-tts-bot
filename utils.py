@@ -30,6 +30,8 @@ class RuntimeObj:
 
         self.tts_queue = asyncio.Queue()
 
+        self._leave_by_command = False
+
 
 def check_id(id: int) -> bool:
     if sha256(str(id).encode("utf-8")).hexdigest() not in whitelist:
