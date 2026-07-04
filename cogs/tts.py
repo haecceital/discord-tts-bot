@@ -201,6 +201,8 @@ class TTSCog(commands.Cog):
             return
 
         if before.channel is not None and after.channel is None:
+            runtime = self.bot.get_runtime(member.guild.id)
+
             if not runtime._leave_by_command:
                 await asyncio.sleep(1)
 
