@@ -1,6 +1,8 @@
-import hashlib, discord, os, edge_tts, re
-from dataclasses import dataclass
+import discord, os, edge_tts, re, asyncio
+from hashlib import sha256
+# from dataclasses import dataclass
 from typing import Optional, Any
+from time import time
 
 
 whitelist = [
@@ -10,9 +12,24 @@ whitelist = [
 
 ffmpeg_path = "./ffmpeg" if os.getenv("RENDER") else "ffmpeg"
 
+# @dataclass
+class RuntimeObj:
+    def __init__(self, guild: discord.Guild):
+        self.guild = guild
+
+        self.locked = False
+        self.listening_channel: Optional[int] = None
+        self.rate = "+0%"
+        self.volume = "+0%"
+        self.timeout = 15
+
+        self.saved_obg: Any = None
+
+        self.tts_queue = asyncio.Queue()
+
 
 def check_id(id: int) -> bool:
-    if hashlib.sha256(str(id).encode("utf-8")).hexdigest() not in whitelist:
+    if sha256(str(id).encode("utf-8")).hexdigest() not in whitelist:
         return True
 
     return False
@@ -57,16 +74,47 @@ async def play_voice(
             rate = rate,
             volume = volume
         )
-        await communicate.save(path)
+        try:
+            await communicate.save(path)
+        except edge_tts.exceptions.NoAudioReceived:
+            return
 
         def after_playing(error):
-            pass
-            # if os.path.exists(path):
-                # os.remove(path)
+            if os.path.exists(path):
+                os.remove(path)
 
     source = discord.FFmpegPCMAudio(executable = ffmpeg_path, source = path)
 
     voice_client.play(source, after = after_playing)
+
+async def voice_init(runtime: RuntimeObj):
+    tts_queue = runtime.tts_queue
+    start_time = time()
+    try:
+        while True:
+            item = await tts_queue.get()
+            
+            voice_client = runtime.guild.voice_client
+            if voice_client:
+                await play_voice(
+                    voice_client,
+                    path = item.get("path"),
+                    text = item.get("text"),
+                    rate = runtime.rate,
+                    volume = runtime.volume
+                )
+                start_time = time()
+
+                while voice_client.is_playing():
+                    if (tts_queue.qsize() >= 1):
+                        if time() - start_time > runtime.timeout: voice_client.stop()
+
+                    await asyncio.sleep(0.25)
+            
+            tts_queue.task_done()
+            
+    except asyncio.CancelledError:
+        pass
 
 def format_sec(secs: int) -> str:
     secs = int(secs)
@@ -77,14 +125,5 @@ def format_sec(secs: int) -> str:
 
     return f"{days:02d} days {hours:02d} hours {mins:02d} mins {secs:02d} secs"
 
-
-@dataclass
-class RuntimeObj:
-    id: int
-    
-    locked: bool = False
-    listening_channel: Optional[int] = None
-    rate: str = "+0%"
-    volume: str = "+0%"
-
-    saved_obg: Any = None
+def codeblock(text: str, lang: str = ""):
+    return f"```{lang}\n{text}```"

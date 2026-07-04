@@ -1,6 +1,6 @@
-import discord, os, time
+import discord, os, time, asyncio
 from discord.ext import commands
-from utils import RuntimeObj
+from utils import RuntimeObj, voice_init
 
 
 class TTSBot(commands.Bot):
@@ -11,7 +11,7 @@ class TTSBot(commands.Bot):
         self.start_time = time.time()
 
     async def on_ready(self):
-        print(f">>{bot.user} is onlin<<")
+        print(f">>{bot.user} is online<<")
 
     def load_cogs(self):
         for filename in os.listdir("./cogs"):
@@ -23,10 +23,12 @@ class TTSBot(commands.Bot):
             except Exception as e:
                 print(f"load falied {cog_path}\n{e}")
 
-    def get_runtime(self, guild_id: int):
+    async def get_runtime(self, guild_id: int):
         if guild_id not in self.runtime:
-            self.runtime[guild_id] = RuntimeObj(guild_id)
+            self.runtime[guild_id] = RuntimeObj(self.get_guild(guild_id) or (await self.fetch_guild(guild_id)))
             
+            asyncio.create_task(voice_init(self.runtime[guild_id]))
+
         return self.runtime[guild_id]
 
 
