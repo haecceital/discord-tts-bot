@@ -1,23 +1,24 @@
-import discord, asyncio
+import os
+from uuid import uuid4
+
+import discord
+import edge_tts
 from discord.ext import commands
-from utils import check_id, play_voice, replace, RuntimeObj, codeblock
 
+from utils import RuntimeObj, check_id, mention_to_name
 
-sound_effects = {
-    "what the dog doing": "soundeffects/WhatTheDogDoing.mp3",
-    "why are you gay": "soundeffects/WhyAreYouGay.mp3",
-    "陽光彩虹小白馬": "soundeffects/SunshineRainbowWhitePony.mp3",
-    # "顆秒": "soundeffects/OneTap.mp3",
-    "creeper": "soundeffects/CreeperHiss.mp3",
-    "windows xp shutdown": "soundeffects/WindowsXpShutdown.mp3",
-    "sus": "soundeffects/AmongUsStart.mp3",
-}
+ffmpeg_path = "./ffmpeg" if os.getenv("RENDER") else "ffmpeg"
+
 
 def check_format(text: str) -> bool:
-    if len(text) < 3: return False
-    elif text[0] != '-' and text[0] != '+': return False
-    elif text[-1] != '%': return False
-    elif not text[1:-1].isdigit(): return False
+    if len(text) < 3:
+        return False
+    elif text[0] != "-" and text[0] != "+":
+        return False
+    elif text[-1] != "%":
+        return False
+    elif not text[1:-1].isdigit():
+        return False
 
     return True
 
@@ -26,7 +27,29 @@ class TTSCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name = "join")
+        self.bot.get_file["tts"] = self.get_file
+
+    async def get_file(self, content: str, runtime: RuntimeObj):
+        output = f"tts_{uuid4().hex}.mp3"
+
+        VOICE = "zh-TW-HsiaoChenNeural"
+        communicate = edge_tts.Communicate(
+            content, VOICE, rate=runtime.rate, volume=runtime.volume
+        )
+        try:
+            await communicate.save(output)
+        except edge_tts.exceptions.NoAudioReceived:
+            return
+
+        def after_playing(error):
+            if os.path.exists(output):
+                os.remove(output)
+
+        source = discord.FFmpegPCMAudio(executable=ffmpeg_path, source=output)
+
+        return source, after_playing
+
+    @commands.command(name="join")
     async def join(self, ctx):
         runtime = await self.bot.get_runtime(ctx.guild.id)
 
@@ -47,7 +70,7 @@ class TTSCog(commands.Cog):
         else:
             await ctx.reply("join a voice channel first")
 
-    @commands.command(name = "leave")
+    @commands.command(name="leave")
     async def leave(self, ctx):
         runtime = await self.bot.get_runtime(ctx.guild.id)
 
@@ -61,12 +84,14 @@ class TTSCog(commands.Cog):
             await ctx.reply("goodbye")
 
             if runtime.listening_channel:
-                await ctx.reply(f"stop listening {self.bot.get_channel(runtime.listening_channel)}")
+                await ctx.reply(
+                    f"stop listening {self.bot.get_channel(runtime.listening_channel)}"
+                )
                 runtime.listening_channel = None
         else:
             await ctx.reply("currently not in voice channel")
 
-    @commands.command(name = "listen")
+    @commands.command(name="listen")
     async def listen(self, ctx):
         runtime = await self.bot.get_runtime(ctx.guild.id)
 
@@ -74,7 +99,7 @@ class TTSCog(commands.Cog):
             await ctx.add_reaction("💩")
             await ctx.reply(":x:")
             return
-        
+
         if not ctx.voice_client:
             await ctx.reply("im not in a voice channel")
             return
@@ -88,7 +113,7 @@ class TTSCog(commands.Cog):
 
             await ctx.reply(f"stop listening {ctx.channel.name}")
 
-    @commands.command(name = "rate")
+    @commands.command(name="rate")
     async def rate(self, ctx, rate: str = None):
         runtime = await self.bot.get_runtime(ctx.guild.id)
 
@@ -107,7 +132,7 @@ class TTSCog(commands.Cog):
 
         await ctx.reply(f"rate is set to {runtime.rate}")
 
-    @commands.command(name = "volume")
+    @commands.command(name="volume")
     async def volume(self, ctx, volume: str = None):
         runtime = await self.bot.get_runtime(ctx.guild.id)
 
@@ -126,44 +151,7 @@ class TTSCog(commands.Cog):
 
         await ctx.reply(f"volume is set to {runtime.volume}")
 
-    @commands.command(name = "play")
-    async def play(self, ctx, *, effect: str = None):
-        runtime = await self.bot.get_runtime(ctx.guild.id)
-
-        if runtime.locked and check_id(ctx.author.id):
-            await ctx.add_reaction("💩")
-            await ctx.reply(":x:")
-            return
-
-        if effect is None:
-            result = "navailable effect list:\n"
-            for idx, key in enumerate(sound_effects):
-                result += f"  {idx}: " + key + '\n'
-
-            result = codeblock(result)
-
-            await ctx.reply(result)
-            return
-        
-        voice_client = ctx.voice_client
-        effect_path = None
-        if not voice_client:
-            await ctx.reply("join a voice channel before using tts")
-            return
-        if (effect_path := sound_effects.get(effect)) is not None:
-            await ctx.message.add_reaction("<:Air:1458671145845788744>")            
-        elif effect.isdigit():
-            effect = int(effect)
-
-            effect_path = ""
-            for idx, key in enumerate(sound_effects):
-                if idx == effect: effect_path = sound_effects.get(key)
-
-            await ctx.message.add_reaction(":Air:1458671145845788744")
-
-        await runtime.tts_queue.put({"path": effect_path})
-
-    @commands.command(name = "tts")
+    @commands.command(name="tts")
     async def tts(self, ctx, *, text: str):
         runtime = await self.bot.get_runtime(ctx.guild.id)
 
@@ -176,21 +164,25 @@ class TTSCog(commands.Cog):
         if not voice_client:
             await ctx.reply("join a voice channel before using tts")
             return
-        
+
         await ctx.message.add_reaction(":Air:1458671145845788744")
-        
-        await runtime.tts_queue.put({"text": replace(text, ctx.guild)})
+
+        content = mention_to_name(text, ctx.guild)
+        await runtime.tts_queue.put({"proc": "tts", "content": content})
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         runtime = await self.bot.get_runtime(message.guild.id)
 
-        if message.author == self.bot.user or message.author.bot: return
-        if runtime.listening_channel != message.channel.id: return
+        if message.author == self.bot.user or message.author.bot:
+            return
+        if runtime.listening_channel != message.channel.id:
+            return
         if runtime.locked and check_id(message.author.id):
             await message.add_reaction("💩")
-            return        
-        if message.content.startswith('!'): return
+            return
+        if message.content.startswith("!"):
+            return
 
         voice_client = message.guild.voice_client
         if not voice_client:
@@ -198,7 +190,8 @@ class TTSCog(commands.Cog):
 
         await message.add_reaction(":Air:1458671145845788744")
 
-        await runtime.tts_queue.put({"text": replace(message.content, message.guild)})
+        content = mention_to_name(message.content, message.guild)
+        await runtime.tts_queue.put({"proc": "tts", "content": content})
 
 
 def setup(bot):
