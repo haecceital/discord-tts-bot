@@ -55,7 +55,7 @@ class AdminCog(commands.Cog):
                 elif att == "origin":
                     target = self.bot
                 elif att == "saved_obj":
-                    target = runtime.saved_obg
+                    target = runtime.saved_obj
                 else:
                     await ctx.reply(f"attribute {att} doesnt exist")
                     return
@@ -77,7 +77,7 @@ class AdminCog(commands.Cog):
                     )
 
                     if save_obj:
-                        runtime.saved_obg = result
+                        runtime.saved_obj = result
                         await ctx.reply("obj saved!")
                 except Exception as e:
                     await ctx.reply(codeblock(e, "py"))
@@ -115,7 +115,7 @@ class AdminCog(commands.Cog):
             await ctx.reply(result)
 
             if save_obj:
-                runtime.saved_obg = target
+                runtime.saved_obj = target
                 await ctx.reply("obj saved!")
 
     @commands.command(name="exec")

@@ -25,7 +25,7 @@ class RuntimeObj:
         self.volume = "+0%"
         self.timeout = 15
 
-        self.saved_obg: Any = None
+        self.saved_obj: Any = None
 
         self.tts_queue = asyncio.Queue()
 
