@@ -24,6 +24,7 @@ class RuntimeObj:
         self.rate = "+0%"
         self.volume = "+0%"
         self.timeout = 15
+        self.voice = "zh-TW-HsiaoChenNeural"
 
         self.saved_obj: Any = None
 

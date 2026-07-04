@@ -68,6 +68,10 @@ class SoundCog(commands.Cog):
 
             await ctx.message.add_reaction(":Air:1458671145845788744")
 
+        if effect_path is None:
+            await ctx.reply("syntax error")
+            return
+
         await runtime.tts_queue.put({"proc": "sound", "content": effect_path})
 
 

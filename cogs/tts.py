@@ -35,9 +35,8 @@ class TTSCog(commands.Cog):
     async def get_file(self, content: str, runtime: RuntimeObj):
         output = f"tts_{uuid4().hex}.mp3"
 
-        VOICE = "zh-TW-HsiaoChenNeural"
         communicate = edge_tts.Communicate(
-            content, VOICE, rate=runtime.rate, volume=runtime.volume
+            content, runtime.voice, rate=runtime.rate, volume=runtime.volume
         )
         try:
             await communicate.save(output)
@@ -207,13 +206,13 @@ class TTSCog(commands.Cog):
         if before.channel is not None and after.channel is None:
             global leave_by_command
             if not leave_by_command:
-                asyncio.sleep(1)
+                await asyncio.sleep(1)
 
                 await before.channel.connect()
                 return
 
             leave_by_command = False
-            runtime = self.bot.get_runtime(member.guild.id)
+            runtime = await self.bot.get_runtime(member.guild.id)
 
             try:
                 while not runtime.tts_queue.empty():

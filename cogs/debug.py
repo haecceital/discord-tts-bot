@@ -4,6 +4,12 @@ from discord.ext import commands
 
 from utils import check_id, codeblock, format_sec
 
+voices = [
+    "zh-TW-HsiaoChenNeural",
+    "zh-CN-XiaoxiaoNeural",
+    "ja-JP-NanamiNeural",
+]
+
 
 class DebugCog(commands.Cog):
     def __init__(self, bot):
@@ -32,7 +38,8 @@ class DebugCog(commands.Cog):
         stat += f"listening channel: {channel_name}\n"
         stat += f"rate: {runtime.rate}\n"
         stat += f"volume: {runtime.volume}\n"
-        stat += f"timeout: {runtime.timeout}"
+        stat += f"timeout: {runtime.timeout}\n"
+        stat += f"voice: {runtime.voice}"
 
         stat = codeblock(stat)
 
@@ -102,7 +109,8 @@ class DebugCog(commands.Cog):
             return
 
         if target is None:
-            result = "timeout"
+            result = "timeout\n"
+            result += "voice"
 
             await ctx.reply(codeblock(result))
             return
@@ -114,6 +122,23 @@ class DebugCog(commands.Cog):
 
                 await ctx.reply(f"timeout value is set to {value}")
             else:
+                await ctx.reply("syntax error")
+        elif target == "voice":
+            if value is None:
+                result = "\n".join(
+                    [
+                        f"{i}: {voices[i]}{' (current)' if voices[i] == runtime.voice else ''}"
+                        for i in range(len(voices))
+                    ]
+                )
+                await ctx.reply(codeblock(result))
+
+                return
+
+            try:
+                runtime.voice = voices[int(value)]
+                await ctx.reply(f"voice is set to {runtime.voice}")
+            except:
                 await ctx.reply("syntax error")
 
     @commands.command(name="query")
