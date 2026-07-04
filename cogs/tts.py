@@ -1,3 +1,4 @@
+import asyncio
 import os
 from uuid import uuid4
 
@@ -8,6 +9,8 @@ from discord.ext import commands
 from utils import RuntimeObj, check_id, mention_to_name
 
 ffmpeg_path = "./ffmpeg" if os.getenv("RENDER") else "ffmpeg"
+
+leave_by_command = False
 
 
 def check_format(text: str) -> bool:
@@ -82,6 +85,9 @@ class TTSCog(commands.Cog):
         if ctx.voice_client:
             await ctx.voice_client.disconnect()
             await ctx.reply("goodbye")
+
+            global leave_by_command
+            leave_by_command = True
 
             if runtime.listening_channel:
                 await ctx.reply(
@@ -192,6 +198,28 @@ class TTSCog(commands.Cog):
 
         content = mention_to_name(message.content, message.guild)
         await runtime.tts_queue.put({"proc": "tts", "content": content})
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        if member.id != self.bot.user.id:
+            return
+
+        if before.channel is not None and after.channel is None:
+            global leave_by_command
+            if not leave_by_command:
+                asyncio.sleep(1)
+
+                await before.channel.connect()
+                return
+
+            leave_by_command = False
+            runtime = self.bot.get_runtime(member.guild.id)
+
+            try:
+                while not runtime.tts_queue.empty():
+                    runtime.tts_queue.get_nowait()
+            except Exception as e:
+                pass
 
 
 def setup(bot):
