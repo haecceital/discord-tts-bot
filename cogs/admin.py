@@ -7,13 +7,98 @@ from discord.ext import commands
 
 from utils import check_id, codeblock
 
+voices = [
+    "zh-TW-HsiaoChenNeural",
+    "zh-CN-XiaoxiaoNeural",
+    "ja-JP-NanamiNeural",
+]
+
 
 class AdminCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.command(name="lock")
+    async def lock(self, ctx):
+        if check_id(ctx.author.id):
+            await ctx.reply("permission denied")
+            return
+
+        runtime = await self.bot.get_runtime(ctx.guild.id)
+        runtime.locked = not runtime.locked
+
+        if runtime.locked:
+            await ctx.reply("locked")
+        else:
+            await ctx.reply("unlocked")
+
+    @commands.command(name="reload")
+    async def reload(self, ctx, cog_name: str | None = None):
+        if check_id(ctx.author.id):
+            await ctx.reply("permission denied")
+            return
+
+        if cog_name is None:
+            result = ""
+            for cog in self.bot.extensions:
+                result += cog.split(".")[-1] + "\n"
+            result = codeblock(result)
+
+            await ctx.reply(result)
+            return
+
+        cog_name = cog_name.lower()
+
+        try:
+            self.bot.reload_extension(f"cogs.{cog_name}")
+            await ctx.reply(f"cogs.{cog_name} successfully reloaded")
+        except Exception as e:
+            await ctx.reply(codeblock(str(e), "py"))
+
+    @commands.command(name="mod")
+    async def mod(self, ctx, target: str | None = None, value: str | None = None):
+        if check_id(ctx.author.id):
+            await ctx.reply("permission denied")
+            return
+
+        result = ""
+        if target is None:
+            result = "timeout\n"
+            result += "voice"
+
+            await ctx.reply(codeblock(result))
+            return
+
+        runtime = await self.bot.get_runtime(ctx.guild.id)
+        if target == "timeout":
+            if value and value.isdigit():
+                runtime.timeout = int(value)
+
+                await ctx.reply(f"timeout value is set to {value}")
+            else:
+                await ctx.reply("syntax error")
+        elif target == "voice":
+            if value is None:
+                result = "\n".join(
+                    [
+                        f"{i}: {voices[i]}{' (current)' if voices[i] == runtime.voice else ''}"
+                        for i in range(len(voices))
+                    ]
+                )
+                await ctx.reply(codeblock(result))
+
+                return
+
+            try:
+                runtime.voice = voices[int(value)]
+                await ctx.reply(f"voice is set to {runtime.voice}")
+            except:
+                await ctx.reply("syntax error")
+
+            await ctx.reply(codeblock(result))
+
     @commands.command(name="dump")
-    async def dump(self, ctx, *, s: str = None):
+    async def dump(self, ctx, *, s: str | None = None):
         runtime = await self.bot.get_runtime(ctx.guild.id)
 
         if check_id(ctx.author.id):
@@ -80,7 +165,7 @@ class AdminCog(commands.Cog):
                         runtime.saved_obj = result
                         await ctx.reply("obj saved!")
                 except Exception as e:
-                    await ctx.reply(codeblock(e, "py"))
+                    await ctx.reply(codeblock(str(e), "py"))
         else:
             if name is None:
                 name = ""
@@ -119,7 +204,7 @@ class AdminCog(commands.Cog):
                 await ctx.reply("obj saved!")
 
     @commands.command(name="exec")
-    async def exec(self, ctx, *, cmd: str = None):
+    async def exec(self, ctx, *, cmd: str):
         if check_id(ctx.author.id):
             await ctx.reply("permission denied")
             return

@@ -33,7 +33,7 @@ class SoundCog(commands.Cog):
         return source, after_playing
 
     @commands.command(name="play")
-    async def play(self, ctx, *, effect: str = None):
+    async def play(self, ctx, *, effect: str | None = None):
         runtime = await self.bot.get_runtime(ctx.guild.id)
 
         if runtime.locked and check_id(ctx.author.id):
@@ -52,26 +52,24 @@ class SoundCog(commands.Cog):
             return
 
         voice_client = ctx.voice_client
-        effect_path = None
         if not voice_client:
-            await ctx.reply("join a voice channel before using tts")
+            await ctx.reply("join a voice channel before using play")
             return
-        if (effect_path := sound_effects.get(effect)) is not None:
-            await ctx.message.add_reaction("<:Air:1458671145845788744>")
-        elif effect.isdigit():
-            effect = int(effect)
+
+        effect_path = sound_effects.get(effect)
+        if effect_path is None and effect.isdigit():
+            effect_idx = int(effect)
 
             effect_path = ""
             for idx, key in enumerate(sound_effects):
-                if idx == effect:
+                if idx == effect_idx:
                     effect_path = sound_effects.get(key)
-
-            await ctx.message.add_reaction(":Air:1458671145845788744")
 
         if effect_path is None:
             await ctx.reply("syntax error")
             return
 
+        await ctx.message.add_reaction(":Air:1458671145845788744")
         await runtime.tts_queue.put({"proc": "sound", "content": effect_path})
 
 

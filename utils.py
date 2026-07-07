@@ -69,7 +69,7 @@ def format_sec(secs: int) -> str:
     return f"{days:02d} days {hours:02d} hours {mins:02d} mins {secs:02d} secs"
 
 
-def codeblock(text: str, lang: str = ""):
+def codeblock(text: str, lang: str = "") -> str:
     s = f"{lang}\n{text}"[:1900]
 
     return f"```{s}```"

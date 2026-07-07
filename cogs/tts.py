@@ -58,8 +58,12 @@ class TTSCog(commands.Cog):
             await ctx.reply(":x:")
             return
 
-        if ctx.author.voice:
-            channel = ctx.author.voice.channel
+        if ctx.author.voice or isinstance(ctx.channel, discord.VoiceChannel):
+            channel = None
+            if ctx.author.voice:
+                channel = ctx.channel
+            else:
+                channel = ctx.channel
 
             if ctx.voice_client:
                 await ctx.voice_client.move_to(channel)
@@ -84,6 +88,7 @@ class TTSCog(commands.Cog):
             await ctx.reply("goodbye")
 
             runtime._leave_by_command = True
+            print(runtime._leave_by_command)
 
             if runtime.listening_channel:
                 await ctx.reply(
@@ -116,7 +121,7 @@ class TTSCog(commands.Cog):
             await ctx.reply(f"stop listening {ctx.channel.name}")
 
     @commands.command(name="rate")
-    async def rate(self, ctx, rate: str = None):
+    async def rate(self, ctx, rate: str | None = None):
         runtime = await self.bot.get_runtime(ctx.guild.id)
 
         if runtime.locked and check_id(ctx.author.id):
@@ -135,7 +140,7 @@ class TTSCog(commands.Cog):
         await ctx.reply(f"rate is set to {runtime.rate}")
 
     @commands.command(name="volume")
-    async def volume(self, ctx, volume: str = None):
+    async def volume(self, ctx, volume: str | None = None):
         runtime = await self.bot.get_runtime(ctx.guild.id)
 
         if runtime.locked and check_id(ctx.author.id):
@@ -174,6 +179,10 @@ class TTSCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        if message.guild is None:
+            await message.reply("unexpected error ocurred")
+            return
+
         runtime = await self.bot.get_runtime(message.guild.id)
 
         if message.author == self.bot.user or message.author.bot:
@@ -201,10 +210,13 @@ class TTSCog(commands.Cog):
             return
 
         if before.channel is not None and after.channel is None:
-            runtime = self.bot.get_runtime(member.guild.id)
+            await asyncio.sleep(1.5)
+
+            runtime = await self.bot.get_runtime(member.guild.id)
+            print(runtime._leave_by_command)
 
             if not runtime._leave_by_command:
-                await asyncio.sleep(1)
+                await asyncio.sleep(1.5)
 
                 await before.channel.connect()
                 return
