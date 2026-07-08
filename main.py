@@ -3,7 +3,7 @@ from threading import Thread
 
 from flask import Flask
 
-from bot import bot
+from bot import tts_bot
 
 try:
     from dotenv import load_dotenv
@@ -17,7 +17,7 @@ app = Flask("")
 
 @app.route("/")
 def home():
-    return ">>Bot is alive<<"
+    return "<h1> >>Bot is alive<< </h1>"
 
 
 def run_web():
@@ -28,4 +28,4 @@ def run_web():
 Thread(target=run_web).start()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
-bot.run(TOKEN)
+tts_bot.run(TOKEN)

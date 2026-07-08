@@ -88,7 +88,6 @@ class TTSCog(commands.Cog):
             await ctx.reply("goodbye")
 
             runtime._leave_by_command = True
-            print(runtime._leave_by_command)
 
             if runtime.listening_channel:
                 await ctx.reply(
@@ -121,7 +120,7 @@ class TTSCog(commands.Cog):
             await ctx.reply(f"stop listening {ctx.channel.name}")
 
     @commands.command(name="rate")
-    async def rate(self, ctx, rate: str | None = None):
+    async def rate(self, ctx, rate: str = ""):
         runtime = await self.bot.get_runtime(ctx.guild.id)
 
         if runtime.locked and check_id(ctx.author.id):
@@ -129,7 +128,7 @@ class TTSCog(commands.Cog):
             await ctx.reply(":x:")
             return
 
-        if rate is None:
+        if rate == "":
             runtime.rate = "+0%"
         elif check_format(rate):
             runtime.rate = rate
@@ -140,7 +139,7 @@ class TTSCog(commands.Cog):
         await ctx.reply(f"rate is set to {runtime.rate}")
 
     @commands.command(name="volume")
-    async def volume(self, ctx, volume: str | None = None):
+    async def volume(self, ctx, volume: str = ""):
         runtime = await self.bot.get_runtime(ctx.guild.id)
 
         if runtime.locked and check_id(ctx.author.id):
@@ -148,7 +147,7 @@ class TTSCog(commands.Cog):
             await ctx.reply(":x:")
             return
 
-        if volume is None:
+        if volume == "":
             runtime.volume = "+0%"
         elif check_format(volume):
             runtime.volume = volume
@@ -213,7 +212,6 @@ class TTSCog(commands.Cog):
             await asyncio.sleep(1.5)
 
             runtime = await self.bot.get_runtime(member.guild.id)
-            print(runtime._leave_by_command)
 
             if not runtime._leave_by_command:
                 await asyncio.sleep(1.5)

@@ -4,10 +4,37 @@ from discord.ext import commands
 
 from utils import check_id, codeblock, format_sec
 
+help_info = {
+    "dump": "!dump obj= name= exec= args= kwargs= save",
+    "exec": "!exec [python]",
+    "play": "!play [int]",
+    "echo": "!echo [str]",
+    "reload": "!reload [cog]",
+    "mod": "!mod [key] [value]",
+    "query": "!query item",
+    "rate": "!rate [+-][int]%",
+    "volume": "!volume [+-][int]%",
+    "tts": "!tts [str]",
+}
+
 
 class GeneralCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command(name="help")
+    async def help(self, ctx):
+        runtime = await self.bot.get_runtime(ctx.guild.id)
+
+        if runtime.locked and check_id(ctx.author.id):
+            await ctx.reply(":x:")
+            return
+
+        result = "\n".join(self.bot.all_commands.values)
+        for k, v in help_info.items():
+            result = result.replace(k, f"{k} usage: {v}")
+
+        ctx.reply(codeblock(result))
 
     @commands.command(name="stats")
     async def stats(self, ctx):
@@ -60,12 +87,12 @@ class GeneralCog(commands.Cog):
         await ctx.reply(format_sec(time() - self.bot.start_time))
 
     @commands.command(name="query")
-    async def query(self, ctx, target: str | None = None):
+    async def query(self, ctx, target: str = ""):
         if check_id(ctx.author.id):
             await ctx.reply("permission denied")
             return
 
-        if target is None:
+        if target == "":
             result = "queue"
 
             await ctx.reply(codeblock(result))

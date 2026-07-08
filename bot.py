@@ -17,7 +17,7 @@ class TTSBot(commands.Bot):
         self.start_time = time()
 
     async def on_ready(self):
-        print(f">>{bot.user} is online<<")
+        print(f">>{self.user} is online<<")
 
     def load_cogs(self):
         for filename in os.listdir("./cogs"):
@@ -75,10 +75,10 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-bot = TTSBot(
+tts_bot = TTSBot(
     command_prefix="!",
     intents=intents,
     # help_command = None
 )
 
-bot.load_cogs()
+tts_bot.load_cogs()

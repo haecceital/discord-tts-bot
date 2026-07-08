@@ -33,7 +33,7 @@ class SoundCog(commands.Cog):
         return source, after_playing
 
     @commands.command(name="play")
-    async def play(self, ctx, *, effect: str | None = None):
+    async def play(self, ctx, *, effect: str = ""):
         runtime = await self.bot.get_runtime(ctx.guild.id)
 
         if runtime.locked and check_id(ctx.author.id):
@@ -41,10 +41,12 @@ class SoundCog(commands.Cog):
             await ctx.reply(":x:")
             return
 
-        if effect is None:
+        if effect == "":
             result = "available effect list:\n"
             for idx, key in enumerate(sound_effects):
                 result += f"  {idx}: " + key + "\n"
+
+            result += "usage: !play [id]"
 
             result = codeblock(result)
 

@@ -33,12 +33,12 @@ class AdminCog(commands.Cog):
             await ctx.reply("unlocked")
 
     @commands.command(name="reload")
-    async def reload(self, ctx, cog_name: str | None = None):
+    async def reload(self, ctx, cog_name: str = ""):
         if check_id(ctx.author.id):
             await ctx.reply("permission denied")
             return
 
-        if cog_name is None:
+        if cog_name == "":
             result = ""
             for cog in self.bot.extensions:
                 result += cog.split(".")[-1] + "\n"
@@ -56,13 +56,13 @@ class AdminCog(commands.Cog):
             await ctx.reply(codeblock(str(e), "py"))
 
     @commands.command(name="mod")
-    async def mod(self, ctx, target: str | None = None, value: str | None = None):
+    async def mod(self, ctx, target: str = "", value: str = ""):
         if check_id(ctx.author.id):
             await ctx.reply("permission denied")
             return
 
         result = ""
-        if target is None:
+        if target == "":
             result = "timeout\n"
             result += "voice"
 
@@ -71,14 +71,14 @@ class AdminCog(commands.Cog):
 
         runtime = await self.bot.get_runtime(ctx.guild.id)
         if target == "timeout":
-            if value and value.isdigit():
+            if value.isdigit():
                 runtime.timeout = int(value)
 
                 await ctx.reply(f"timeout value is set to {value}")
             else:
                 await ctx.reply("syntax error")
         elif target == "voice":
-            if value is None:
+            if value == "":
                 result = "\n".join(
                     [
                         f"{i}: {voices[i]}{' (current)' if voices[i] == runtime.voice else ''}"
@@ -93,41 +93,40 @@ class AdminCog(commands.Cog):
                 runtime.voice = voices[int(value)]
                 await ctx.reply(f"voice is set to {runtime.voice}")
             except:
-                await ctx.reply("syntax error")
-
-            await ctx.reply(codeblock(result))
+                runtime.voice = value
+                await ctx.reply(f"voice is set to {runtime.voice}")
 
     @commands.command(name="dump")
-    async def dump(self, ctx, *, s: str | None = None):
+    async def dump(self, ctx, *, s: str = ""):
         runtime = await self.bot.get_runtime(ctx.guild.id)
 
         if check_id(ctx.author.id):
             await ctx.reply("permission denied")
             return
 
-        attributes = None
-        name = None
-        execute = None
-        args = None
-        kwargs = None
-        save_obj = False
-        if s is not None:
-            for block in s.split():
-                if block.startswith("obj="):
-                    attributes = block.replace("obj=", "")
-                elif block.startswith("name="):
-                    name = block.replace("name=", "")
-                elif block.startswith("exec="):
-                    execute = block.replace("exec=", "")
-                elif block.startswith("args="):
-                    args = [eval(arg) for arg in block.replace("args=", "").split("|")]
-                elif block.startswith("kwargs="):
-                    kwargs = {}
-                    for kw in block.replace("kwargs=", "").split("|"):
-                        k, v = kw.split("=", 1)
-                        kwargs[k] = eval(v)
-                elif block == "save":
-                    save_obj = True
+        if s == "":
+            result = "!dump obj= name= exec= args= kwargs= save"
+            ctx.reply(codeblock(result))
+
+            return
+
+        attributes = name = execute = args = kwargs = save_obj = None
+        for block in s.split():
+            if block.startswith("obj="):
+                attributes = block.replace("obj=", "")
+            elif block.startswith("name="):
+                name = block.replace("name=", "")
+            elif block.startswith("exec="):
+                execute = block.replace("exec=", "")
+            elif block.startswith("args="):
+                args = [eval(arg) for arg in block.replace("args=", "").split("|")]
+            elif block.startswith("kwargs="):
+                kwargs = {}
+                for kw in block.replace("kwargs=", "").split("|"):
+                    k, v = kw.split("=", 1)
+                    kwargs[k] = eval(v)
+            elif block == "save":
+                save_obj = True
 
             if name is None and attributes is None:
                 attributes = s
@@ -185,7 +184,7 @@ class AdminCog(commands.Cog):
                 )
                 + "\n\n"
             )
-            double_att = [
+            dunder_att = [
                 att for att in dir(target) if att.startswith("__") and name in att
             ]
             # target_protected_atts = "protected attributes: " + ", ".join([att for att in dir(target) if att.startswith('_') and att not in double_att and name in att]) + "\n\n"
