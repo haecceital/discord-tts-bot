@@ -75,10 +75,6 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-tts_bot = TTSBot(
-    command_prefix="!",
-    intents=intents,
-    # help_command = None
-)
+tts_bot = TTSBot(command_prefix="!", intents=intents, help_command=None)
 
 tts_bot.load_cogs()

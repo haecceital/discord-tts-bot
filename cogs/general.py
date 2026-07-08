@@ -30,11 +30,11 @@ class GeneralCog(commands.Cog):
             await ctx.reply(":x:")
             return
 
-        result = "\n".join(self.bot.all_commands.values)
+        result = "\n".join(self.bot.all_commands.keys())
         for k, v in help_info.items():
             result = result.replace(k, f"{k} usage: {v}")
 
-        ctx.reply(codeblock(result))
+        await ctx.reply(codeblock(result))
 
     @commands.command(name="stats")
     async def stats(self, ctx):
