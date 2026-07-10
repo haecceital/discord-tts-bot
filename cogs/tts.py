@@ -178,14 +178,14 @@ class TTSCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        if message.author == self.bot.user or message.author.bot:
+            return
+
         if message.guild is None:
             await message.reply("unexpected error ocurred")
             return
 
         runtime = await self.bot.get_runtime(message.guild.id)
-
-        if message.author == self.bot.user or message.author.bot:
-            return
         if runtime.listening_channel != message.channel.id:
             return
         if runtime.locked and check_id(message.author.id):

@@ -5,9 +5,9 @@ from discord.ext import commands
 from utils import check_id, codeblock, format_sec
 
 help_info = {
-    "dump": "!dump obj= name= exec= args= kwargs= save",
+    "dump": "!dump [obj, obj= name= exec= args= kwargs= save]",
     "exec": "!exec [python]",
-    "play": "!play [int]",
+    "play": "!play [id, name]",
     "echo": "!echo [str]",
     "reload": "!reload [cog]",
     "mod": "!mod [key] [value]",
